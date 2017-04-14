@@ -1,5 +1,5 @@
 /*
-  SD card datalogger
+  Modded SD card datalogger (RC)
 
  This example shows how to log data from three analog sensors
  to an SD card using the SD library.
@@ -23,12 +23,10 @@
 #include <SPI.h>
 #include <SD.h>
 
-const int chipSelect = 4;
-
-const int buttonPin = 2;
-int buttonState = 0; 
-
-const int ledPin =  13;
+const int chipSelect = 4;   //SD Card
+const int buttonPin = 2;    //pushbutton pin
+int buttonState = 0;        //pushbutton state
+const int ledPin =  13;     //On/Off LED pin
 
 void setup()
 {
@@ -48,8 +46,8 @@ void setup()
     return;
   }
   //Serial.println("card initialized.");
-  // initialize the pushbutton pin as an input:
   
+  // initialize the pushbutton pin as an input:
   pinMode(buttonPin, INPUT);
   // initialize the LED pin as an output:
   pinMode(ledPin, OUTPUT);
@@ -61,7 +59,7 @@ void loop()
   // make a string for assembling the data to log:
   String dataString = "";
 
-  // read three sensors and append to the string:
+  // read sensors and append to the string:
   int analogPin = 2;
   int sensor = analogRead(analogPin);
   dataString += String(sensor);
