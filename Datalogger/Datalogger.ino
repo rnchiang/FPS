@@ -24,38 +24,48 @@
 #include <SD.h>
 
 const int chipSelect = 4;   //SD Card
-const int buttonPin = 2;    //pushbutton pin
-int buttonState = 0;        //pushbutton state
-const int ledPin =  13;     //On/Off LED pin
+const int PowerLedPin =  12;     //On/Off LED pin
+const int StrokeLedPin =  3;     //Stroke LED pin
+int fileCount = 1;
+char fileName [50];
+
+File dataFile;
 
 void setup()
 {
+  
   // Open serial communications and wait for port to open:
-  //Serial.begin(9600);
-  //while (!Serial) {
+  Serial.begin(9600);
+  while (!Serial) {
   // ; // wait for serial port to connect. Needed for Leonardo only
-  //}
-
-
-  //Serial.print("Initializing SD card...");
+  }
+  
+  Serial.print("Initializing SD card...");
 
   // see if the card is present and can be initialized:
   if (!SD.begin(chipSelect)) {
-    //Serial.println("Card failed, or not present");
+    Serial.println("Card failed, or not present");
     // don't do anything more:
     return;
   }
-  //Serial.println("card initialized.");
+  Serial.println("card initialized.");
   
-  // initialize the pushbutton pin as an input:
-  pinMode(buttonPin, INPUT);
   // initialize the LED pin as an output:
-  pinMode(ledPin, OUTPUT);
+  pinMode(PowerLedPin, OUTPUT);
+  // initialize the LED pin as an output:
+  pinMode(StrokeLedPin, OUTPUT);
+  
+  create_file();
+  
+  delay(5000);
 }
 
 void loop()
 {
-  buttonState = digitalRead(buttonPin);
+  
+  // if on, turn on RED LED
+  digitalWrite(PowerLedPin, HIGH);
+  //buttonState = HIGH; //real code: buttonState = digitalRead(buttonPin);
   // make a string for assembling the data to log:
   String dataString = "";
 
@@ -63,31 +73,51 @@ void loop()
   int analogPin = 2;
   int sensor = analogRead(analogPin);
   dataString += String(sensor);
-    
-  if (buttonState == HIGH) {
-    
-    // open the file. note that only one file can be open at a time,
-    // so you have to close this one before opening another.
-    File dataFile = SD.open("datalog.txt", FILE_WRITE);
-  
-    // if the file is available, write to it:
-    if (dataFile) {
-      dataFile.println(dataString);
-      digitalWrite(ledPin, HIGH);
-      dataFile.close();
-      // print to the serial port too:
-      //Serial.println(dataString);
+
+  // open the file. note that only one file can be open at a time,
+  // so you have to close this one before opening another.
+  dataFile = SD.open(fileName, FILE_WRITE);
+
+  // if the file is available, write to it:
+  if (dataFile) {
+    dataFile.println(dataString);
+    dataFile.close();
+    // print to the serial port too:
+    Serial.println(dataString);
+
+    // If stroke taken, light GREEN LED
+    if (sensor > 0) {
+      digitalWrite(StrokeLedPin, HIGH);
     }
-    // if the file isn't open, pop up an error:
     else {
-      //Serial.println("error opening datalog.txt");
+      digitalWrite(StrokeLedPin, LOW);
     }
+    
   }
+  // if the file isn't open, pop up an error:
   else {
-    digitalWrite(ledPin, LOW);
+    Serial.println("error opening datalog.txt");
+    Serial.println(fileName);
   }
+
 }
 
+void create_file () {
+  
+  /// DATAFILE CREATION
+  int n = sprintf(fileName, "datalog%d.txt", fileCount);
+  if (SD.exists(fileName)){
+    while(SD.exists(fileName)){
+      Serial.print(fileName);Serial.println(" already exists.");
+      fileCount++;
+      n = sprintf(fileName, "datalog%d.txt", fileCount);
+    }
+  }
+  Serial.print("Creating ... ");Serial.println(fileName);
+  dataFile = SD.open(fileName, FILE_WRITE);
+  dataFile.close(); 
+  
+}
 
 
 
